@@ -2,27 +2,62 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Jugar Partida</title>
+    <title>Connect4 - Jugar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .cuadro {
             width: 60px;
             height: 60px;
-            border: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            background-color: white;
+            border: 2px solid #fff;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 30px;
         }
-        .cuadro.j1 { color: red; }
-        .cuadro.j2 { color: blue; }
     </style>
 </head>
-<body class="bg-light">
+<body class="bg-dark text-white">
 
-<div class="container mt-4">
-    FALTA DESARROLLAR LOGICA DEL JUEGO 
+<div class="container text-center mt-4">
+    <h2>Partida #{{ partida_id }}</h2>
+    <h4>Turno actual: {{ turno_actual }}</h4>
+
+
+    <form method="POST" class="mb-3">
+        <label>Seleccionar columna:</label>
+        <select name="columna" required>
+            {% for col in ['A','B','C','D','E','F','G'] %}
+                <option value="{{ col }}">{{ col }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Jugar</button>
+    </form>
+
+    <!-- Tablero -->
+    <table class="mx-auto bg-secondary">
+        <tr>
+            {% for col in ['A','B','C','D','E','F','G'] %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+        {% for fila in range(5, -1, -1) %}
+        <tr>
+            {% for col in ['A','B','C','D','E','F','G'] %}
+            <td class="cuadro">
+                {% set ficha = '' %}
+                {% for m in movimientos %}
+                    {% if m[0] == col and m[1] == fila %}
+                        {% set ficha = '🔴' if m[2] == jugador1_id else '🟡' %}
+                    {% endif %}
+                {% endfor %}
+                {{ ficha }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="{{ url_for('index') }}" class="btn btn-outline-light mt-4">⬅ Volver al inicio</a>
+</div>
 
 </body>
 </html>
