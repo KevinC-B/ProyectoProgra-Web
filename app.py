@@ -71,7 +71,7 @@ def crear_partida():
     conn.close()
     return render_template('crear_partida.html', jugadores=jugadores)
 ######################################################
-S
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
