@@ -92,30 +92,39 @@
         <p class="mb-5 text-warning">Selecciona una opción para empezar la batalla de fichas</p>
 
         <div class="row justify-content-center g-4">
-            <div class="col-md-4">
-                <div class="game-card">
-                    <h3>👤 Jugadores</h3>
-                    <p>Crear o listar jugadores</p>
-                    <a href="{{ url_for('jugadores') }}" class="btn btn-start">Entrar</a>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="game-card">
-                    <h3>🕹️ Nueva Partida</h3>
-                    <p>Inicia un duelo entre dos jugadores</p>
-                    <a href="{{ url_for('crear_partida') }}" class="btn btn-start">Comenzar</a>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="game-card">
-                    <h3>🎯 Jugar</h3>
-                    <p>Modo básico para probar la cuadrícula</p>
-                    <a href="jugar.html" class="btn btn-start">Ir a jugar</a>
-                </div>
-            </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="game-card">
+            <h3>👤 Crear jugador</h3>
+            <p>Registrá nuevos participantes</p>
+            <a href="{{ url_for('jugadores') }}" class="btn btn-start">Ingresar</a>
         </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="game-card">
+            <h3>🕹️ Nueva partida</h3>
+            <p>Elegí dos jugadores para jugar</p>
+            <a href="{{ url_for('crear_partida') }}" class="btn btn-start">Crear</a>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="game-card">
+            <h3>🎯 Cargar partida</h3>
+            <p>Continúa una partida existente</p>
+            <a href="{{ url_for('cargar_partida') }}" class="btn btn-start">Cargar</a>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="game-card">
+            <h3>🏆 Escalafón</h3>
+            <p>Ver ranking de jugadores</p>
+            <a href="{{ url_for('escalafon') }}" class="btn btn-start">Ver</a>
+        </div>
+    </div>
+</div>
+
     </main>
 
  
