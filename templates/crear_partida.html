@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <title>Crear Partida - Connect4</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
- 
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet">
 
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
         body {
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Poppins', sans-serif;
             background: linear-gradient(to bottom, #141E30, #243B55);
             color: #fff;
-            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
         }
 
         .navbar {
@@ -23,6 +28,7 @@
 
         .navbar-brand {
             color: white;
+            font-size: 20px;
         }
 
         .navbar-brand:hover {
@@ -30,42 +36,89 @@
         }
 
         label, select, .btn {
-            font-size: 12px;
+            font-size: 14px;
+        }
+
+        .btn-game, .btn-success {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 10px 25px;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .btn-game:hover, .btn-success:hover {
+            background-color: #ffcc00;
+        }
+
+        .btn-outline-light {
+            border-radius: 6px;
+            padding: 8px 20px;
         }
 
         footer {
             background-color: #111;
             color: #aaa;
             text-align: center;
-            padding: 10px;
-            margin-top: 50px;
+            padding: 12px;
+            font-size: 0.9rem;
+            margin-top: auto;
         }
 
-        .btn-game {
-            background-color: #ffc107;
-            color: #000;
-            border: none;
-            padding: 10px 25px;
-            font-size: 14px;
-            margin-top: 10px;
-            text-transform: uppercase;
+        .content-wrapper {
+            flex: 1 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
         }
 
-        .btn-game:hover {
-            background-color: #ffcc00;
+        .content-box {
+            width: 100%;
+            max-width: 900px;
         }
     </style>
 </head>
 <body>
 
     <nav class="navbar fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
-        </div>
-    </nav>
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+    <div>
+      <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">➕ Crear Jugador</a>
+      <a href="{{ url_for('cargar_partida') }}" class="btn btn-outline-light btn-sm me-2">📂 Cargar Partida</a>
+      <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
+    </div>
+  </div>
+</nav>
 
-    <div class="container mt-5">
+
+    <div class="container content-wrapper">
+      <div class="content-box">
         <h2 class="text-center text-warning mb-4">🕹️ Crear nueva partida</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        {% if error_same_player %}
+            <div class="alert alert-danger text-center">
+                ❌ No es permitido escoger el mismo jugador. Un jugador no puede jugar contra sí mismo.
+            </div>
+        {% endif %}
 
         <form method="POST" class="row g-3 mb-5 justify-content-center">
             <div class="col-md-6">
@@ -91,18 +144,18 @@
             <div class="col-12 text-center">
                 <button type="submit" class="btn btn-success">🎯 Crear partida</button>
             </div>
-
         </form>
 
         <div class="text-center">
             <a href="{{ url_for('index') }}" class="btn btn-outline-light">⬅ Volver al inicio</a>
         </div>
+      </div>
     </div>
-
 
     <footer>
         <small>© 2025 Connect4 | Proyecto estudiantil</small>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

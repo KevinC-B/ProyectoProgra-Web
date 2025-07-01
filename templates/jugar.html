@@ -1,63 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Connect4 - Jugar</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .cuadro {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #fff;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 30px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Partida Connect4</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #141E30, #243B55);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    .navbar {
+      background-color: #ff0040;
+    }
+    .navbar-brand {
+      color: white;
+      font-size: 20px;
+    }
+    .navbar-brand:hover {
+      color: #ffc107;
+    }
+    .tablero-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .botones {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .tablero {
+      display: grid;
+      grid-template-columns: repeat(7, 70px);
+      grid-template-rows: repeat(6, 70px);
+      gap: 5px;
+      background-color: #0a58ca;
+      border: 8px solid #06397d;
+      padding: 10px;
+      border-radius: 15px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .celda {
+      width: 70px;
+      height: 70px;
+      background-color: #0d6efd;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ficha {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: white;
+      animation: caer 0.4s ease-out;
+    }
+    @keyframes caer {
+      0% {
+        transform: translateY(-200px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .jugador1 {
+      background-color: #dc3545;
+    }
+    .jugador2 {
+      background-color: #f0ad4e;
+    }
+    footer {
+      background-color: #111;
+      color: #aaa;
+      text-align: center;
+      padding: 12px;
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+    .content-wrapper {
+      flex: 1 0 auto;
+      padding-top: 80px;
+    }
+  </style>
 </head>
-<body class="bg-dark text-white">
+<body>
 
-<div class="container text-center mt-4">
-    <h2>Partida #{{ partida_id }}</h2>
-    <h4>Turno actual: {{ turno_actual }}</h4>
+  <nav class="navbar fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+    </div>
+  </nav>
 
+  <div class="container content-wrapper text-center">
+    <h2 class="text-warning">Partida #{{ partida_id }}</h2>
+    <p class="lead">Turno actual: <strong class="text-info">{{ turno_actual }}</strong></p>
 
-    <form method="POST" class="mb-3">
-        <label>Seleccionar columna:</label>
-        <select name="columna" required>
-            {% for col in ['A','B','C','D','E','F','G'] %}
-                <option value="{{ col }}">{{ col }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary btn-sm">Jugar</button>
-    </form>
-
-    <!-- Tablero -->
-    <table class="mx-auto bg-secondary">
-        <tr>
-            {% for col in ['A','B','C','D','E','F','G'] %}
-            <th>{{ col }}</th>
-            {% endfor %}
-        </tr>
-        {% for fila in range(5, -1, -1) %}
-        <tr>
-            {% for col in ['A','B','C','D','E','F','G'] %}
-            <td class="cuadro">
-                {% set ficha = '' %}
-                {% for m in movimientos %}
-                    {% if m[0] == col and m[1] == fila %}
-                        {% set ficha = '🔴' if m[2] == jugador1_id else '🟡' %}
-                    {% endif %}
-                {% endfor %}
-                {{ ficha }}
-            </td>
-            {% endfor %}
-        </tr>
+    <div class="tablero-container">
+      <!-- Botones de columna -->
+      <form method="POST" class="botones">
+        {% for letra in ['A','B','C','D','E','F','G'] %}
+          <button name="columna" value="{{ letra }}" class="btn btn-sm btn-warning fw-bold">
+            {{ letra }}
+          </button>
         {% endfor %}
-    </table>
+      </form>
 
-    <a href="{{ url_for('index') }}" class="btn btn-outline-light mt-4">⬅ Volver al inicio</a>
-</div>
+      <!-- Tablero visual -->
+      <div class="tablero">
+        {% for row in [5, 4, 3, 2, 1, 0] %}
+          {% for col_index in range(7) %}
+            {% set ficha = None %}
+            {% for mov in movimientos %}
+              {% set col_letra, fila, jug_id = mov %}
+              {% if fila == row and 'ABCDEFG'.index(col_letra) == col_index %}
+                {% set ficha = jug_id %}
+              {% endif %}
+            {% endfor %}
+            <div class="celda">
+              {% if ficha %}
+              <div class="ficha {% if ficha == jugador1_id %}jugador1{% elif ficha == jugador2_id %}jugador2{% endif %}"></div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light">⬅ Volver al inicio</a>
+    </div>
+  </div>
+
+  <footer>
+    <small>© 2025 Connect4 | Proyecto Connect4 en Flask</small>
+  </footer>
 
 </body>
 </html>
