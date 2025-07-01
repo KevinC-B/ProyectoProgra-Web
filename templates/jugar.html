@@ -127,6 +127,13 @@
   <div class="container content-wrapper text-center">
     <h2 class="text-warning">Partida #{{ partida_id }}</h2>
     <p class="lead">Turno actual: <strong class="text-info">{{ turno_actual }}</strong></p>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
     <div class="tablero-container">
       <!-- Botones de columna -->
@@ -141,24 +148,22 @@
 <!-- Tablero visual -->
 <div class="tablero">
   {% set letras = ['A','B','C','D','E','F','G'] %}
-  {% for row in range(6) %}
+  {% for fila in [5,4,3,2,1,0] %}
     {% for col_letra in letras %}
       {% set ficha = None %}
       {% for mov in movimientos %}
-        {% if mov[0]|upper == col_letra and mov[1] == (5 - row) %}
+        {% if mov[0]|upper == col_letra and mov[1] == fila %}
           {% set ficha = mov[2] %}
         {% endif %}
       {% endfor %}
       <div class="celda">
         {% if ficha %}
-        <div class="ficha {% if ficha == jugador1_id %}jugador1{% elif ficha == jugador2_id %}jugador2{% endif %}"></div>
+          <div class="ficha {% if ficha == jugador1_id %}jugador1{% elif ficha == jugador2_id %}jugador2{% endif %}"></div>
         {% endif %}
       </div>
     {% endfor %}
   {% endfor %}
 </div>
-
-
 
     </div>
 

@@ -202,19 +202,20 @@ def escalafon():
 
     cursor.execute("""
         SELECT 
-            j.Identificacion,
-            j.Nombre,
-            j.Marcador,
-            (SELECT COUNT(*) FROM Partidas WHERE GanadorId = j.JugadorId) AS Ganadas,
-            (SELECT COUNT(*) FROM Partidas 
-                WHERE Estado = 'FINALIZADA' AND GanadorId IS NOT NULL 
-                AND (Jugador1Id = j.JugadorId OR Jugador2Id = j.JugadorId) 
-                AND GanadorId != j.JugadorId) AS Perdidas,
-            (SELECT COUNT(*) FROM Partidas 
-                WHERE Estado = 'FINALIZADA' AND GanadorId IS NULL 
-                AND (Jugador1Id = j.JugadorId OR Jugador2Id = j.JugadorId)) AS Empatadas
-        FROM Jugadores j
-        ORDER BY j.Marcador DESC
+    j.Identificacion,
+    j.Nombre,
+    j.Marcador,
+    (SELECT COUNT(*) FROM Partidas WHERE GanadorId = j.JugadorId) AS Ganadas,
+    (SELECT COUNT(*) FROM Partidas 
+     WHERE Estado = 'FINALIZADA' AND GanadorId IS NOT NULL 
+     AND (Jugador1Id = j.JugadorId OR Jugador2Id = j.JugadorId) 
+     AND GanadorId != j.JugadorId) AS Perdidas,
+    (SELECT COUNT(*) FROM Partidas 
+     WHERE Estado = 'FINALIZADA' AND GanadorId IS NULL 
+     AND (Jugador1Id = j.JugadorId OR Jugador2Id = j.JugadorId)) AS Empatadas
+FROM Jugadores j
+ORDER BY j.Marcador DESC
+
     """)
 
     datos = cursor.fetchall()

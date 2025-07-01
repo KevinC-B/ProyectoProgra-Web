@@ -81,30 +81,33 @@
       {% if partidas %}
         <div class="table-responsive">
           <table class="table table-dark table-bordered table-hover mx-auto">
-            <thead>
-              <tr>
-                <th>Jugador 1</th>
-                <th>Jugador 2</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for partida in partidas %}
-              <tr>
-                <td>{{ partida.jugador1 }}</td>
-                <td>{{ partida.jugador2 }}</td>
-                <td>{{ partida.fecha }}</td>
-                <td>{{ partida.estado }}</td>
-                <td>
-                  <a href="{{ url_for('jugar', partida_id=partida.id) }}" class="btn btn-sm btn-success">
-                    Reanudar
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
+<thead>
+  <tr>
+    <th># Partida</th>
+    <th>Jugador 1</th>
+    <th>Jugador 2</th>
+    <th>Fecha</th>
+    <th>Estado</th>
+    <th>Acción</th>
+  </tr>
+</thead>
+<tbody>
+  {% for partida in partidas %}
+  <tr>
+    <td>#{{ partida.id }}</td>
+    <td>{{ partida.jugador1 }}</td>
+    <td>{{ partida.jugador2 }}</td>
+    <td>{{ partida.fecha }}</td>
+    <td>{{ partida.estado }}</td>
+    <td>
+      <a href="{{ url_for('jugar', partida_id=partida.id) }}" class="btn btn-sm btn-success">
+        Reanudar
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+
           </table>
         </div>
       {% else %}
