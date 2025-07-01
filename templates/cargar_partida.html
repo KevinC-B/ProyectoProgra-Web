@@ -3,95 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <title>Cargar Partida - Connect4</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(to bottom, #141E30, #243B55);
       color: #fff;
-      padding-top: 80px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
+
     .navbar {
       background-color: #ff0040;
     }
+
     .navbar-brand {
       color: #fff;
     }
+
     .navbar-brand:hover {
       color: #ffc107;
     }
+
+    main {
+      flex: 1 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 100px 20px 40px;
+      text-align: center;
+    }
+
+    .table thead th {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .table {
+      max-width: 1000px;
+    }
+
     footer {
       background-color: #111;
       color: #aaa;
       text-align: center;
       padding: 12px;
       font-size: 0.9rem;
-      margin-top: 40px;
-    }
-    .table thead th {
-      background-color: #dc3545;
-      color: #fff;
+      margin-top: auto;
     }
   </style>
 </head>
 <body>
 
-<nav class="navbar fixed-top">
-  <div class="container d-flex justify-content-between align-items-center">
-    <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
-    <div>
-      <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">👤 Crear Jugador</a>
-      <a href="{{ url_for('crear_partida') }}" class="btn btn-outline-light btn-sm me-2">🕹️ Nueva Partida</a>
-      <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
+  <nav class="navbar fixed-top">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+      <div>
+        <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">👤 Crear Jugador</a>
+        <a href="{{ url_for('crear_partida') }}" class="btn btn-outline-light btn-sm me-2">🕹️ Nueva Partida</a>
+        <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
+  <main>
+    <div class="container">
+      <h2 class="text-warning mb-4">📂 Cargar Partida Existente</h2>
 
-<div class="container mt-5">
-  <h2 class="text-center text-warning mb-4">📂 Cargar Partida Existente</h2>
+      {% if partidas %}
+        <div class="table-responsive">
+          <table class="table table-dark table-bordered table-hover mx-auto">
+            <thead>
+              <tr>
+                <th>Jugador 1</th>
+                <th>Jugador 2</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for partida in partidas %}
+              <tr>
+                <td>{{ partida.jugador1 }}</td>
+                <td>{{ partida.jugador2 }}</td>
+                <td>{{ partida.fecha }}</td>
+                <td>{{ partida.estado }}</td>
+                <td>
+                  <a href="{{ url_for('jugar', partida_id=partida.id) }}" class="btn btn-sm btn-success">
+                    Reanudar
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-light">No hay partidas registradas aún.</p>
+      {% endif %}
 
-  {% if partidas %}
-    <table class="table table-dark table-bordered table-hover">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Jugador 1</th>
-          <th>Jugador 2</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for partida in partidas %}
-        <tr>
-          <td>{{ partida.id }}</td>
-          <td>{{ partida.jugador1 }}</td>
-          <td>{{ partida.jugador2 }}</td>
-          <td>{{ partida.fecha }}</td>
-          <td>{{ partida.estado }}</td>
-          <td>
-            <a href="{{ url_for('jugar', partida_id=partida.id) }}" class="btn btn-sm btn-success">
-              Reanudar
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p class="text-center">No hay partidas registradas aún.</p>
-  {% endif %}
+      <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-light">⬅ Volver al inicio</a>
+      </div>
+    </div>
+  </main>
 
-  <div class="text-center mt-3">
-    <a href="{{ url_for('index') }}" class="btn btn-outline-light">⬅ Volver al inicio</a>
-  </div>
-</div>
-
-<footer>
-  <small>© 2025 Connect4 | Proyecto en Flask</small>
-</footer>
+  <footer>
+    <small>© 2025 Connect4 | Proyecto en Flask</small>
+  </footer>
 
 </body>
 </html>

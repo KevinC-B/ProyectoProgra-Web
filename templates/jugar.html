@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Partida Connect4</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet">
+
   <style>
     html, body {
       height: 100%;
+      margin: 0;
     }
+
     body {
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(to bottom, #141E30, #243B55);
@@ -16,28 +20,40 @@
       display: flex;
       flex-direction: column;
     }
+
     .navbar {
       background-color: #ff0040;
     }
+
     .navbar-brand {
       color: white;
       font-size: 20px;
     }
+
     .navbar-brand:hover {
       color: #ffc107;
     }
+
+    .content-wrapper {
+      flex: 1 0 auto;
+      padding-top: 80px;
+      padding-bottom: 40px;
+    }
+
     .tablero-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 20px;
     }
+
     .botones {
       display: flex;
       justify-content: center;
       gap: 10px;
       margin-bottom: 15px;
+      flex-wrap: wrap;
     }
+
     .tablero {
       display: grid;
       grid-template-columns: repeat(7, 70px);
@@ -49,6 +65,7 @@
       border-radius: 15px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
+
     .celda {
       width: 70px;
       height: 70px;
@@ -58,29 +75,31 @@
       align-items: center;
       justify-content: center;
     }
+
     .ficha {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background-color: white;
-      animation: caer 0.4s ease-out;
-    }
-    @keyframes caer {
-      0% {
-        transform: translateY(-200px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: white;
+  transform: translateY(-200px);
+  opacity: 0;
+  animation: caer 0.5s ease-out forwards;
+}
+
+
     .jugador1 {
       background-color: #dc3545;
     }
+
     .jugador2 {
       background-color: #f0ad4e;
     }
+
+    @keyframes caer {
+      0% { transform: translateY(-200px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
     footer {
       background-color: #111;
       color: #aaa;
@@ -89,19 +108,21 @@
       font-size: 0.9rem;
       margin-top: auto;
     }
-    .content-wrapper {
-      flex: 1 0 auto;
-      padding-top: 80px;
-    }
   </style>
 </head>
 <body>
 
   <nav class="navbar fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+    <div>
+      <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">👤 Crear Jugador</a>
+      <a href="{{ url_for('crear_partida') }}" class="btn btn-outline-light btn-sm me-2">🕹️ Nueva Partida</a>
+      <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <div class="container content-wrapper text-center">
     <h2 class="text-warning">Partida #{{ partida_id }}</h2>
@@ -117,29 +138,38 @@
         {% endfor %}
       </form>
 
-      <!-- Tablero visual -->
-      <div class="tablero">
-        {% for row in [5, 4, 3, 2, 1, 0] %}
-          {% for col_index in range(7) %}
-            {% set ficha = None %}
-            {% for mov in movimientos %}
-              {% set col_letra, fila, jug_id = mov %}
-              {% if fila == row and 'ABCDEFG'.index(col_letra) == col_index %}
-                {% set ficha = jug_id %}
-              {% endif %}
-            {% endfor %}
-            <div class="celda">
-              {% if ficha %}
-              <div class="ficha {% if ficha == jugador1_id %}jugador1{% elif ficha == jugador2_id %}jugador2{% endif %}"></div>
-              {% endif %}
-            </div>
-          {% endfor %}
-        {% endfor %}
+<!-- Tablero visual -->
+<div class="tablero">
+  {% set letras = ['A','B','C','D','E','F','G'] %}
+  {% for row in range(6) %}
+    {% for col_letra in letras %}
+      {% set ficha = None %}
+      {% for mov in movimientos %}
+        {% if mov[0]|upper == col_letra and mov[1] == (5 - row) %}
+          {% set ficha = mov[2] %}
+        {% endif %}
+      {% endfor %}
+      <div class="celda">
+        {% if ficha %}
+        <div class="ficha {% if ficha == jugador1_id %}jugador1{% elif ficha == jugador2_id %}jugador2{% endif %}"></div>
+        {% endif %}
       </div>
+    {% endfor %}
+  {% endfor %}
+</div>
+
+
+
     </div>
 
-    <div class="mt-4">
-      <a href="{{ url_for('index') }}" class="btn btn-outline-light">⬅ Volver al inicio</a>
+    <!-- Botones adicionales -->
+    <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{{ url_for('crear_partida_mismos', jugador1=jugador1_id, jugador2=jugador2_id) }}" class="btn btn-danger">
+        🔁 Reiniciar con mismos jugadores
+      </a>
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+        ⬅ Volver al inicio
+      </a>
     </div>
   </div>
 
@@ -148,4 +178,5 @@
   </footer>
 
 </body>
+
 </html>

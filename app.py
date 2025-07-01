@@ -97,7 +97,6 @@ def actualizar_marcador(jugador_id):
 
 
 ####################################################
-# Crear nueva partida
 @app.route('/partida/nueva', methods=['GET', 'POST'])
 def crear_partida():
     conn = get_db_connection()
@@ -107,14 +106,15 @@ def crear_partida():
         jugador1_id = request.form['jugador1']
         jugador2_id = request.form['jugador2']
 
+        # ❌ Mismo jugador seleccionado
         if jugador1_id == jugador2_id:
-            flash("⚠️ No se puede seleccionar el mismo jugador dos veces.", "danger")
+            flash("❌ No es permitido escoger el mismo jugador. Un jugador no puede jugar contra sí mismo.", "danger")
             cursor.close()
             conn.close()
             return redirect(url_for('crear_partida'))
 
         try:
-            # Verificar que ambos jugadores existen
+            # ✅ Validar que ambos jugadores existen
             cursor.execute("""
                 SELECT COUNT(*) FROM Jugadores 
                 WHERE JugadorId IN (:1, :2)
@@ -126,12 +126,14 @@ def crear_partida():
                 conn.close()
                 return redirect(url_for('crear_partida'))
 
+            # ✅ Crear la partida
             cursor.execute("""
                 INSERT INTO Partidas (Jugador1Id, Jugador2Id)
                 VALUES (:1, :2)
             """, (jugador1_id, jugador2_id))
             conn.commit()
 
+            # Obtener el ID de la partida recién creada
             cursor.execute("""
                 SELECT PartidaId 
                 FROM Partidas 
@@ -140,21 +142,19 @@ def crear_partida():
             """, (jugador1_id, jugador2_id))
             partida_creada = cursor.fetchone()
 
-            flash("✅ Partida creada correctamente", "success")
+            flash("✅ Partida creada correctamente. ¡A jugar!", "success")
             return redirect(url_for('jugar', partida_id=partida_creada[0]))
 
         except Exception as e:
             conn.rollback()
-            flash(f"❌ Error al crear la partida: {e}", "danger")
-            print(f"ERROR en crear_partida: {e}")
+            flash("❌ Ocurrió un error al crear la partida. Intentalo nuevamente.", "danger")
+            print(f"Error al crear partida: {e}")
 
         finally:
             cursor.close()
             conn.close()
 
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # GET: mostrar formulario
     cursor.execute("SELECT JugadorId, Nombre FROM Jugadores")
     jugadores = cursor.fetchall()
     cursor.close()
@@ -241,67 +241,150 @@ def jugar(partida_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Obtener la partida
     cursor.execute("SELECT * FROM Partidas WHERE PartidaId = :1", (partida_id,))
     partida = cursor.fetchone()
-
     if not partida:
         flash("Partida no encontrada", "danger")
         return redirect(url_for('index'))
 
     jugador1_id = partida[1]
     jugador2_id = partida[2]
+    estado = partida[4]
+    ganador_id = partida[5]
 
-    # Nombres
+    # Obtener nombres
     cursor.execute("SELECT Nombre FROM Jugadores WHERE JugadorId = :1", (jugador1_id,))
     jugador1_nombre = cursor.fetchone()[0]
-
     cursor.execute("SELECT Nombre FROM Jugadores WHERE JugadorId = :1", (jugador2_id,))
     jugador2_nombre = cursor.fetchone()[0]
 
-    # Movimientos
+    # Obtener movimientos
     cursor.execute("SELECT Columna, Fila, JugadorId FROM Movimientos WHERE PartidaId = :1", (partida_id,))
     movimientos = cursor.fetchall()
+    ultima_jugada = movimientos[-1] if movimientos else None
+
+    # Crear matriz del tablero
+    tablero = [['' for _ in range(7)] for _ in range(6)]
+    for col, fila, jugador in movimientos:
+        col_idx = 'ABCDEFG'.index(col)
+        tablero[fila][col_idx] = jugador
 
     # Turno actual
-    cursor.execute("SELECT COUNT(*) FROM Movimientos WHERE PartidaId = :1", (partida_id,))
-    turno = cursor.fetchone()[0]
+    turno = len(movimientos)
     turno_actual = jugador1_id if turno % 2 == 0 else jugador2_id
     nombre_turno = jugador1_nombre if turno_actual == jugador1_id else jugador2_nombre
 
-    # POST = jugador escoge columna
-    if request.method == 'POST':
-        columna = request.form['columna']
-        cursor.execute("""
-            SELECT Fila FROM Movimientos 
-            WHERE PartidaId = :1 AND Columna = :2 
-            ORDER BY Fila DESC FETCH FIRST 1 ROWS ONLY
-        """, (partida_id, columna))
-        fila_ocupada = cursor.fetchone()
-        fila = fila_ocupada[0] + 1 if fila_ocupada else 0
+    # Si ya está finalizada, no aceptar más jugadas
+    if estado == 'FINALIZADA':
+        cursor.close()
+        conn.close()
+        return render_template('jugar.html',
+            partida_id=partida_id,
+            jugador1=jugador1_nombre,
+            jugador2=jugador2_nombre,
+            turno_actual="Partida finalizada",
+            jugador1_id=jugador1_id,
+            jugador2_id=jugador2_id,
+            movimientos=movimientos,
+            ultima_jugada=ultima_jugada,
+            filas=list(reversed(range(6)))
+        )
 
-        if fila >= 6:
-            flash("Columna llena", "warning")
+    # POST: jugador hace jugada
+    if request.method == 'POST':
+        columna = request.form['columna'].upper()
+        if columna not in 'ABCDEFG':
+            flash("Columna inválida", "danger")
         else:
-            cursor.execute("""
-                INSERT INTO Movimientos (PartidaId, JugadorId, Columna, Fila, Turno)
-                VALUES (:1, :2, :3, :4, :5)
-            """, (partida_id, turno_actual, columna, fila, turno + 1))
-            conn.commit()
-            return redirect(url_for('jugar', partida_id=partida_id))
+            col_idx = 'ABCDEFG'.index(columna)
+            # Verificar fila disponible en columna
+            fila_disponible = None
+            for f in range(6):
+                if tablero[f][col_idx] == '':
+                    fila_disponible = f
+                    break
+            if fila_disponible is None:
+                flash("Columna llena", "warning")
+            else:
+                # Insertar jugada
+                cursor.execute("""
+                    INSERT INTO Movimientos (PartidaId, JugadorId, Columna, Fila, Turno)
+                    VALUES (:1, :2, :3, :4, :5)
+                """, (partida_id, turno_actual, columna, fila_disponible, turno + 1))
+                conn.commit()
+
+                # Actualizar tablero en memoria
+                tablero[fila_disponible][col_idx] = turno_actual
+
+                # Verificar victoria
+                def verificar_4_en_linea(tablero, jugador):
+                    for f in range(6):
+                        for c in range(7):
+                            if c + 3 < 7 and all(tablero[f][c+i] == jugador for i in range(4)):
+                                return True
+                            if f + 3 < 6 and all(tablero[f+i][c] == jugador for i in range(4)):
+                                return True
+                            if f + 3 < 6 and c + 3 < 7 and all(tablero[f+i][c+i] == jugador for i in range(4)):
+                                return True
+                            if f + 3 < 6 and c - 3 >= 0 and all(tablero[f+i][c-i] == jugador for i in range(4)):
+                                return True
+                    return False
+
+                if verificar_4_en_linea(tablero, turno_actual):
+                    cursor.execute("""
+                        UPDATE Partidas SET Estado = 'FINALIZADA', GanadorId = :1
+                        WHERE PartidaId = :2
+                    """, (turno_actual, partida_id))
+                    conn.commit()
+                    flash("🎉 ¡Victoria de {}!".format(nombre_turno), "success")
+                elif turno + 1 == 42:
+                    cursor.execute("""
+                        UPDATE Partidas SET Estado = 'FINALIZADA', GanadorId = NULL
+                        WHERE PartidaId = :1
+                    """, (partida_id,))
+                    conn.commit()
+                    flash("🤝 ¡Empate!", "info")
+                return redirect(url_for('jugar', partida_id=partida_id))
 
     cursor.close()
     conn.close()
 
     return render_template('jugar.html',
-                       partida_id=partida_id,
-                       jugador1=jugador1_nombre,
-                       jugador2=jugador2_nombre,
-                       turno_actual=nombre_turno,
-                       jugador1_id=jugador1_id,
-                       jugador2_id=jugador2_id,
-                       movimientos=movimientos,
-                       filas=list(reversed(range(6))))  # 👈
+        partida_id=partida_id,
+        jugador1=jugador1_nombre,
+        jugador2=jugador2_nombre,
+        turno_actual=nombre_turno,
+        jugador1_id=jugador1_id,
+        jugador2_id=jugador2_id,
+        movimientos=movimientos,
+        ultima_jugada=ultima_jugada,
+        filas=list(reversed(range(6)))
+    )
 
+##########################################################
+@app.route('/reiniciar/<int:jugador1>/<int:jugador2>')
+def crear_partida_mismos(jugador1, jugador2):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO Partidas (Jugador1Id, Jugador2Id)
+        VALUES (:1, :2)
+    """, (jugador1, jugador2))
+    conn.commit()
+
+    cursor.execute("""
+        SELECT PartidaId FROM Partidas
+        WHERE Jugador1Id = :1 AND Jugador2Id = :2
+        ORDER BY PartidaId DESC FETCH FIRST 1 ROWS ONLY
+    """, (jugador1, jugador2))
+    nueva_partida = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+    flash("🔁 Nueva partida creada con los mismos jugadores", "info")
+    return redirect(url_for('jugar', partida_id=nueva_partida[0]))
 
 ##########################################
 if __name__ == '__main__':
