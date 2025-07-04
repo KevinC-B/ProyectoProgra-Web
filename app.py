@@ -17,7 +17,7 @@ def index():
     return render_template('index.html')
 
 ###################################################
-
+####holi prueba
 @app.route('/jugadores', methods=['GET', 'POST'])
 def jugadores():
     
@@ -40,7 +40,7 @@ def jugadores():
             conn.commit() #Guardar jugador si cumple con los requisitos
             flash("Jugador creado correctamente", "success")
         except oracledb.Error as e: 
-            conn.rollback() #Deshacer cambios si hay un error
+            conn.rollback() 
             error_obj, = e.args
             if error_obj.code == 1: #Código de error para violación de restricción PK
                 flash(f"❌ La identificación {identificacion} ya está registrada. Intenta con otra.", "danger")
