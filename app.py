@@ -43,7 +43,8 @@ def jugadores():
             conn.rollback() #Deshacer cambios si hay un error
             error_obj, = e.args
             if error_obj.code == 1: #Código de error para violación de restricción PK
-                flash(f"Error: La identificación '{identificacion}' ya existe.", "danger")
+                flash(f"❌ La identificación {identificacion} ya está registrada. Intenta con otra.", "danger")
+
             else:
                 flash(f"Error al crear jugador: {error_obj.message}", "danger")
             print(f"Error al insertar jugador: {e}")
@@ -196,27 +197,33 @@ def cargar_partida():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT p.PartidaId, 
-               j1.Nombre AS jugador1, 
-               j2.Nombre AS jugador2, 
-               TO_CHAR(p.FechaInicio, 'YYYY-MM-DD HH24:MI') AS fecha,
-               p.Estado
-        FROM Partidas p
-        JOIN Jugadores j1 ON p.Jugador1Id = j1.JugadorId
-        JOIN Jugadores j2 ON p.Jugador2Id = j2.JugadorId
-        ORDER BY p.FechaInicio DESC
-    """)
+    SELECT p.PartidaId, 
+           j1.Nombre AS jugador1, 
+           j2.Nombre AS jugador2, 
+           TO_CHAR(p.FechaInicio, 'YYYY-MM-DD HH24:MI') AS fecha,
+           p.Estado,
+           p.GanadorId,
+           jg.Nombre AS ganador_nombre
+    FROM Partidas p
+    JOIN Jugadores j1 ON p.Jugador1Id = j1.JugadorId
+    JOIN Jugadores j2 ON p.Jugador2Id = j2.JugadorId
+    LEFT JOIN Jugadores jg ON p.GanadorId = jg.JugadorId
+    ORDER BY p.FechaInicio DESC
+""")
+
     datos = cursor.fetchall()
 
     partidas = []
     for row in datos:
         partidas.append({
-            'id': row[0],
-            'jugador1': row[1],
-            'jugador2': row[2],
-            'fecha': row[3],
-            'estado': row[4]
-        })
+    'id': row[0],
+    'jugador1': row[1],
+    'jugador2': row[2],
+    'fecha': row[3],
+    'estado': row[4],
+    'ganador': row[6]  # Puede ser None
+})
+
 
     cursor.close()
     conn.close()
@@ -362,7 +369,7 @@ def jugar(partida_id):
                 tablero=tablero #Pasar el tablero ya construido
             )
         #Para POST (AJAX), devuelve un JSON indicando que la partida ha terminado
-        else: # request.method == 'POST'
+        else: 
             return jsonify({
                 'success': False,
                 'message': f"Partida finalizada. Ganador: {player_names.get(ganador_id, 'Empate')}",
@@ -497,39 +504,31 @@ def jugar(partida_id):
 
 ##########################################################
 
-@app.route('/reiniciar/<int:jugador1>/<int:jugador2>')
-def crear_partida_mismos(jugador1, jugador2):
-
-    """
-    Crea una nueva partida con los mismos jugadores de una partida anterior.
-    """
+@app.route('/reiniciar/<int:partida_id>')
+def reiniciar_misma_partida(partida_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
+        cursor.execute("DELETE FROM Movimientos WHERE PartidaId = :1", (partida_id,))
         cursor.execute("""
-            INSERT INTO Partidas (Jugador1Id, Jugador2Id)
-            VALUES (:1, :2)
-        """, (jugador1, jugador2))
+            UPDATE Partidas 
+            SET Estado = 'EN_CURSO', GanadorId = NULL 
+            WHERE PartidaId = :1
+        """, (partida_id,))
         conn.commit()
 
-        cursor.execute("""
-            SELECT PartidaId FROM Partidas
-            WHERE Jugador1Id = :1 AND Jugador2Id = :2
-            ORDER BY PartidaId DESC FETCH FIRST 1 ROWS ONLY
-        """, (jugador1, jugador2))
-        nueva_partida = cursor.fetchone()
-
-        flash("🔁 Nueva partida creada con los mismos jugadores", "info")
-        return redirect(url_for('jugar', partida_id=nueva_partida[0]))
+        flash("🔄 La partida se ha reiniciado exitosamente.", "info")
+        return redirect(url_for('jugar', partida_id=partida_id))
     except Exception as e:
         conn.rollback()
-        flash(f"Error al reiniciar partida: {e}", "danger")
+        flash(f"Error al reiniciar la partida: {e}", "danger")
         print(f"Error al reiniciar partida: {e}")
-        return redirect(url_for('index')) # O a una página de error
+        return redirect(url_for('index'))
     finally:
         cursor.close()
         conn.close()
+
 
 ##########################################
 if __name__ == '__main__':

@@ -98,7 +98,19 @@
     <td>{{ partida.jugador1 }}</td>
     <td>{{ partida.jugador2 }}</td>
     <td>{{ partida.fecha }}</td>
-    <td>{{ partida.estado }}</td>
+    <td>
+  {% if partida.estado == 'FINALIZADA' %}
+    Finalizada 
+    {% if partida.ganador %}
+      - Ganó {{ partida.ganador }}
+    {% else %}
+      - Empate
+    {% endif %}
+  {% else %}
+    En curso
+  {% endif %}
+</td>
+
     <td>
       <a href="{{ url_for('jugar', partida_id=partida.id) }}" class="btn btn-sm btn-success">
         Reanudar

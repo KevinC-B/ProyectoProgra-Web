@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connect4</title>
-    <!-- Tus enlaces a CSS de Bootstrap, Poppins, etc. aquí -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Tu CSS actual va aquí */
         html, body {
             height: 100%;
             margin: 0;
@@ -45,7 +43,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative; /* Necesario para posicionar el overlay */
+            position: relative;
         }
 
         .botones {
@@ -88,19 +86,17 @@
             opacity: 0;
         }
 
-        /* Colores JavaScript asigna */
-        .jugador1-ficha { /* Cambiado de .jugador1 a .jugador1-ficha para claridad */
+        .jugador1-ficha {
             background-color: #dc3545;
         }
 
-        .jugador2-ficha { /* Cambiado de .jugador2 a .jugador2-ficha para claridad */
-            background-color: #f0ad4e; 
+        .jugador2-ficha {
+            background-color: #f0ad4e;
         }
 
         .caer-animacion {
-             animation: caer 0.5s ease-out forwards;
+            animation: caer 0.5s ease-out forwards;
         }
-
 
         @keyframes caer {
             0% { transform: translateY(-100px); opacity: 0; }
@@ -116,7 +112,6 @@
             margin-top: auto;
         }
 
-        /* Estilos para el overlay de fin de juego */
         .game-over-overlay {
             position: absolute;
             top: 0;
@@ -162,7 +157,6 @@
             border-radius: 8px;
         }
 
-        /* Clase para ocultar elementos */
         .hidden {
             display: none !important;
         }
@@ -171,85 +165,131 @@
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+        .opacity-0 {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+
     </style>
 </head>
 <body>
 
-    <nav class="navbar fixed-top">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
-            <div>
-                <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">👤 Crear Jugador</a>
-                <a href="{{ url_for('crear_partida') }}" class="btn btn-outline-light btn-sm me-2">🕹️ Nueva Partida</a>
-                <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container content-wrapper text-center">
-        <h2 class="text-warning">Partida #{{ partida_id }}</h2>
-        <p class="lead">Turno actual: <strong class="text-info" id="turno-actual">{{ turno_actual }}</strong></p>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} text-center">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="tablero-container">
-            <!-- Botones de columna - ¡IMPORTANTE: YA NO SON UN FORMULARIO! -->
-            <div class="botones">
-                {% for col_index in range(7) %} {# Usamos un índice numérico para las columnas #}
-                    <button class="btn btn-sm btn-warning fw-bold drop-column-btn" data-column="{{ col_index }}">
-                        {{ ['A','B','C','D','E','F','G'][col_index] }}
-                    </button>
-                {% endfor %}
-            </div>
-
-            <!-- Tablero visual -->
-            <div class="tablero">
-                {% for fila in range(5, -1, -1) %} {# Recorrer filas de arriba a abajo para la lógica de caída #}
-                    {% for col_index in range(7) %}
-                        {% set ficha = tablero[fila][col_index] %} {# Asumiendo que 'tablero' es una matriz en Flask #}
-                        <div id="celda-{{ fila }}-{{ col_index }}" class="celda" data-row="{{ fila }}" data-column="{{ col_index }}">
-                            {% if ficha and ficha != 'empty' %}
-                                <div class="ficha {{ 'jugador1-ficha' if ficha == jugador1_id else 'jugador2-ficha' }} caer-animacion"></div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
-
-            <!-- Overlay de fin de juego (inicialmente oculto) -->
-            <div id="game-over-overlay" class="game-over-overlay hidden">
-                <div class="game-over-content">
-                    <h3 id="game-over-message-text"></h3>
-                    <div class="game-over-buttons">
-                        <button id="main-menu-btn" class="btn btn-primary">Volver al Menú Principal</button>
-                        <button id="restart-game-btn" class="btn btn-success">Reiniciar Partida</button>
-                    </div>
-                </div>
-            </div>
-
+<nav class="navbar fixed-top">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="{{ url_for('index') }}">🎮 Connect4</a>
+        <div>
+            <a href="{{ url_for('jugadores') }}" class="btn btn-outline-light btn-sm me-2">👤 Crear Jugador</a>
+            <a href="{{ url_for('crear_partida') }}" class="btn btn-outline-light btn-sm me-2">🕹️ Nueva Partida</a>
+            <a href="{{ url_for('escalafon') }}" class="btn btn-outline-light btn-sm">🏆 Escalafón</a>
         </div>
     </div>
+</nav>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2024 Connect4. Todos los derechos reservados.</p>
+<div class="container content-wrapper text-center">
+    <h2 class="text-warning">Partida #{{ partida_id }}</h2>
+    <p class="lead">Turno actual: <strong class="text-info" id="turno-actual">{{ turno_actual }}</strong></p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} text-center flash-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+
+    <div class="tablero-container">
+    <div class="botones mb-2">
+        {% for col_index in range(7) %}
+            <div class="text-center" style="width: 70px;">
+                <div class="text-white fw-bold mb-1">{{ ['A','B','C','D','E','F','G'][col_index] }}</div>
+                <button class="btn btn-sm btn-warning fw-bold drop-column-btn w-100" data-column="{{ col_index }}">
+                    ↓
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="tablero">
+        {% for fila in range(5, -1, -1) %}
+            {% for col_index in range(7) %}
+                {% set ficha = tablero[fila][col_index] %}
+                <div id="celda-{{ fila }}-{{ col_index }}" class="celda" data-row="{{ fila }}" data-column="{{ col_index }}">
+                    {% if ficha and ficha != 'empty' %}
+                        <div class="ficha {{ 'jugador1-ficha' if ficha == jugador1_id else 'jugador2-ficha' }} caer-animacion"></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+        <div class="text-center mt-4">
+            <button id="reiniciar-manual-btn" class="btn btn-warning shadow px-4 fw-bold rounded-pill">
+                🔁 Reiniciar esta partida
+            </button>
         </div>
-    </footer>
 
-    <!-- Scripts de Bootstrap JS (si los usas) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ¡Pasa el ID de la partida y los IDs de los jugadores a JavaScript! -->
-    <script>
-        const CURRENT_PARTIDA_ID = {{ partida_id }};
-        const JUGADOR1_ID = {{ jugador1_id }};
-        const JUGADOR2_ID = {{ jugador2_id }};
-    </script>
-    <!-- ¡Tu archivo JavaScript para la lógica del juego! -->
-    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1050;">
+            <div id="mensaje-alerta" class="alert alert-warning alert-dismissible fade show d-none" role="alert">
+                <strong>¿Deseás reiniciar la partida?</strong>
+                <button id="confirmar-reinicio" class="btn btn-sm btn-success ms-2">Sí</button>
+                <button id="cancelar-reinicio" class="btn btn-sm btn-secondary ms-1">No</button>
+            </div>
+        </div>
+
+        <div id="game-over-overlay" class="game-over-overlay hidden">
+            <div class="game-over-content">
+                <h3 id="game-over-message-text"></h3>
+                <div class="game-over-buttons">
+                    <button id="main-menu-btn" class="btn btn-primary">Volver al Menú Principal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2024 Connect4. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+<script>
+    setTimeout(() => {
+        const flashes = document.querySelectorAll('.flash-message');
+        flashes.forEach(el => {
+            el.classList.add('opacity-0');
+            setTimeout(() => el.remove(), 500);
+        });
+    }, 5000);
+
+    const CURRENT_PARTIDA_ID = {{ partida_id }};
+    const JUGADOR1_ID = {{ jugador1_id }};
+    const JUGADOR2_ID = {{ jugador2_id }};
+
+    const btnReiniciar = document.getElementById("reiniciar-manual-btn");
+    const alerta = document.getElementById("mensaje-alerta");
+    const confirmar = document.getElementById("confirmar-reinicio");
+    const cancelar = document.getElementById("cancelar-reinicio");
+
+    btnReiniciar.addEventListener("click", () => {
+        alerta.classList.remove("d-none");
+    });
+
+    confirmar.addEventListener("click", () => {
+        window.location.href = `/reiniciar/${CURRENT_PARTIDA_ID}`;
+    });
+
+    cancelar.addEventListener("click", () => {
+        alerta.classList.add("d-none");
+    });
+</script>
+
+
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+<div id="bubble-message" class="alert alert-danger position-fixed top-0 start-50 translate-middle-x d-none mt-3 shadow" style="z-index: 9999;">
+    <span id="bubble-text"></span>
+</div>
+
 </body>
 </html>
