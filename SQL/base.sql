@@ -19,7 +19,7 @@ CREATE TABLE Partidas (
     FOREIGN KEY (GanadorId) REFERENCES Jugadores(JugadorId)
 );
 
--- Tabla de movimientos por partida
+-- Tabla de movimientos por partida, prueba
 CREATE TABLE Movimientos (
     MovimientoId NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     PartidaId NUMBER NOT NULL,
